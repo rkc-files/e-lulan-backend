@@ -1,26 +1,30 @@
-// Import the PostgreSQL client and load environment variables
-const { Pool } = require('pg');
-require('dotenv').config();
+const { Pool } = require("pg");
+require("dotenv").config();
 
-// Create a new Pool instance using environment variables
+// ✅ Use DATABASE_URL if available (Render), otherwise fallback to local env vars
 const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_DATABASE,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
+  connectionString: process.env.DATABASE_URL || undefined,
+  user: process.env.DATABASE_URL ? undefined : process.env.DB_USER,
+  host: process.env.DATABASE_URL ? undefined : process.env.DB_HOST,
+  database: process.env.DATABASE_URL ? undefined : process.env.DB_DATABASE,
+  password: process.env.DATABASE_URL ? undefined : process.env.DB_PASSWORD,
+  port: process.env.DATABASE_URL ? undefined : process.env.DB_PORT,
+
+  // ✅ Render Postgres needs SSL in production
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
-// Test the connection when the module loads
+// ✅ Test the connection on startup
 pool.connect()
-    .then(client => {
-        console.log('✅ Connected to PostgreSQL database successfully!');
-        client.release(); // Release the client back to the pool
-    })
-    .catch(err => {
-        console.error('❌ Database connection error:', err.stack);
-        // You might want to exit the application if the DB connection is critical
-    });
+  .then(client => {
+    console.log("✅ Connected to PostgreSQL database successfully!");
+    client.release();
+  })
+  .catch(err => {
+    console.error("❌ Database connection error:", err.message);
+  });
 
-// Export the pool so other modules (like controllers) can run queries
 module.exports = pool;
