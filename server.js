@@ -23,25 +23,28 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "http://localhost:5174",
+  "https://e-lulan-system.web.app",
+  "https://e-lulan-system.firebaseapp.com",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow Postman or server-side requests
+      // allow requests with no origin (Postman, curl)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      if (allowedOrigins.includes(origin)) return callback(null, true);
 
       console.log("❌ Blocked by CORS:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 
 /* ======================================================
     ✅ ROUTES
