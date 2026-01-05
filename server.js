@@ -20,24 +20,24 @@ app.use(express.json());
 
 // ✅ Allow requests from both local + production frontend
 const allowedOrigins = [
-  "http://localhost:3000",       // React dev
-  "http://localhost:5173",       // Vite default
-  "http://localhost:5174",       // Vite fallback
-  process.env.FRONTEND_URL,      // Deployed frontend (Firebase Hosting)
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // ✅ allow requests with no origin (like Postman, curl)
+    origin: (origin, callback) => {
+      // allow Postman or server-side requests
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
-      } else {
-        console.log("❌ Blocked by CORS:", origin);
-        return callback(new Error("Not allowed by CORS"));
       }
+
+      console.log("❌ Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
