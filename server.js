@@ -4,11 +4,12 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
-// ✅ Load PostgreSQL connection (tests connection on startup)
+// ✅ Load PostgreSQL connection
 const pool = require("./db/db");
 
-// ✅ Import Firebase Admin routes
+// ✅ Import Routes
 const userRoutes = require("./routes/userRoutes");
+const fleetRoutes = require("./routes/fleetRoutes"); // ✅ NEW
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,7 +46,6 @@ app.use(
   })
 );
 
-
 /* ======================================================
     ✅ ROUTES
 ====================================================== */
@@ -57,6 +57,9 @@ app.get("/", (req, res) => {
 
 // ✅ Firebase Admin User Management Routes
 app.use("/api/users", userRoutes);
+
+// ✅ Fleet Bus Account Routes (Option A1)
+app.use("/api/fleet", fleetRoutes);
 
 /* ======================================================
     ✅ START SERVER

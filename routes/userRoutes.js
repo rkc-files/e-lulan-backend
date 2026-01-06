@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { auth, db } = require("../firebaseAdmin");
+const { auth, db, admin } = require("../config/firebaseAdmin");
 const { generateNextAvailableId } = require("../utils/generateEmployeeId");
 
 /* ======================================================
@@ -24,17 +24,20 @@ router.post("/create", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // ✅ Normalize role
+    const normalizedRole = role.trim().toLowerCase();
+
     // ✅ Generate Employee ID based on role
-    const employeeId = await generateNextAvailableId(role);
+    const employeeId = await generateNextAvailableId(normalizedRole);
 
     // ✅ Employees get default password if not provided
     const finalPassword = password || "password123";
 
     // ✅ Create User in Firebase Auth
     const userRecord = await auth.createUser({
-      email,
+      email: email.trim().toLowerCase(),
       password: finalPassword,
-      displayName: `${firstName} ${lastName}`,
+      displayName: `${firstName.trim()} ${lastName.trim()}`,
     });
 
     const uid = userRecord.uid;
@@ -43,22 +46,22 @@ router.post("/create", async (req, res) => {
     await db.collection("users").doc(uid).set({
       uid,
       employeeId,
-      firstName,
-      lastName,
-      email,
-      phone,
-      gender,
-      birthday,
-      role,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone || "",
+      gender: gender || "",
+      birthday: birthday || "",
+      role: normalizedRole,
       status: "Active",
-      createdAt: new Date(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     return res.status(200).json({
       success: true,
       uid,
       employeeId,
-      message: `${role} created successfully`,
+      message: `${normalizedRole} created successfully`,
     });
   } catch (error) {
     console.error("CREATE USER ERROR:", error);
@@ -94,10 +97,13 @@ router.put("/update/:uid", async (req, res) => {
       return res.status(400).json({ error: "UID is required" });
     }
 
-    // ✅ Update Firebase Auth user (only update if email exists in request)
+    // ✅ Normalize optional role
+    const normalizedRole = role ? role.trim().toLowerCase() : undefined;
+
+    // ✅ Update Firebase Auth user
     if (email) {
       await auth.updateUser(uid, {
-        email,
+        email: email.trim().toLowerCase(),
         displayName: `${firstName || ""} ${lastName || ""}`.trim(),
       });
     } else if (firstName || lastName) {
@@ -108,15 +114,15 @@ router.put("/update/:uid", async (req, res) => {
 
     // ✅ Update Firestore user profile
     await db.collection("users").doc(uid).update({
-      ...(firstName && { firstName }),
-      ...(lastName && { lastName }),
-      ...(email && { email }),
+      ...(firstName && { firstName: firstName.trim() }),
+      ...(lastName && { lastName: lastName.trim() }),
+      ...(email && { email: email.trim().toLowerCase() }),
       ...(phone && { phone }),
       ...(gender && { gender }),
       ...(birthday && { birthday }),
-      ...(role && { role }),
+      ...(normalizedRole && { role: normalizedRole }),
       ...(status && { status }),
-      updatedAt: new Date(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     return res.status(200).json({
@@ -126,7 +132,6 @@ router.put("/update/:uid", async (req, res) => {
   } catch (error) {
     console.error("UPDATE USER ERROR:", error);
 
-    // ✅ Handle Auth-specific errors
     if (error.code === "auth/email-already-exists") {
       return res.status(400).json({ error: "Email already exists." });
     }

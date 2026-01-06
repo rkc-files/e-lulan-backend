@@ -1,4 +1,4 @@
-const { db } = require("../firebaseAdmin");
+const { db } = require("../config/firebaseAdmin");
 
 const formatEmployeeId = (role, number) => {
   const padded = String(number).padStart(2, "0");

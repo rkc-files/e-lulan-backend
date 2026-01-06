@@ -14,7 +14,7 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 } else {
   // ✅ Local fallback: Use serviceAccountKey.json (ignored by Git)
   try {
-    serviceAccount = require("./config/serviceAccountKey.json");
+    serviceAccount = require("./serviceAccountKey.json"); // ✅ FIXED PATH
     console.log("✅ Loaded Firebase service account from local JSON file.");
   } catch (err) {
     console.warn("⚠️ No Firebase service account provided (env var or JSON file missing).");
