@@ -4,12 +4,12 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
-// ✅ Load PostgreSQL connection
+// ✅ Load PostgreSQL connection (optional test)
 const pool = require("./db/db");
 
 // ✅ Import Routes
 const userRoutes = require("./routes/userRoutes");
-const fleetRoutes = require("./routes/fleetRoutes"); // ✅ NEW
+const fleetRoutes = require("./routes/fleetRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,8 +32,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (Postman, curl)
-      if (!origin) return callback(null, true);
+      if (!origin) return callback(null, true); // Postman, curl
 
       if (allowedOrigins.includes(origin)) return callback(null, true);
 
